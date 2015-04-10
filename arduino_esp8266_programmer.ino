@@ -49,8 +49,8 @@
 * 
 * connection table:
 * ESP8266  Arduino
-* GPIO0     9
-* RST      10
+* GPIO0    5
+* ENABLE   13
 * RX       TX
 * TX       RX
 * GND      GND
@@ -60,18 +60,18 @@
 * An LED on Arduino Pin 13 would indicate Program Mode.
 */
 
-int program_pin=9;
-int reset_pin=10;
-int led_pin=13;
+int program_pin = 5;
+int enable_pin=13;
+//int led_pin=13;
 
 void setup()
 {
 	Serial1.begin(115000);
 	Serial.begin(115000);
-	pinMode(led_pin, OUTPUT);
-	digitalWrite(led_pin, HIGH);
-	digitalWrite(program_pin,LOW);
-	digitalWrite(reset_pin,LOW);
+    pinMode(enable_pin, OUTPUT);
+    pinMode(program_pin, OUTPUT);
+	digitalWrite(program_pin, LOW);
+	digitalWrite(enable_pin,HIGH);
 
 	Serial.println("ESP8266 programmer ready.");
 }
@@ -81,6 +81,7 @@ long last_send=0;
 // resets the ESP8266 into normal or program / bootloader mode
 void reset_target(bool program_mode)
 {
+    return;
 	if(program_mode)
 	{
 		pinMode(program_pin,OUTPUT);
@@ -89,16 +90,17 @@ void reset_target(bool program_mode)
 	{
 		pinMode(program_pin,INPUT);
 	}
-	digitalWrite(led_pin, program_mode);
+	//digitalWrite(led_pin, program_mode);
 	
 	delay(100);
-	pinMode(reset_pin,OUTPUT);
+	pinMode(enable_pin,INPUT);	
 	delay(100);
-	pinMode(reset_pin,INPUT);	
+	pinMode(enable_pin,OUTPUT);
+	digitalWrite(enable_pin,HIGH);
 	delay(500);
 }
 
-bool program_mode=false;
+bool program_mode=true;
 void loop()
 {
 	// pass data from ESP to host, if any
@@ -112,7 +114,7 @@ void loop()
 	{
 		// if we are not in program mode, trigger reset to bootloader mode.
 		if(!program_mode){
-			reset_target(true);
+			//reset_target(true);
 			program_mode=true;
 		}			
 		// pass data
@@ -125,7 +127,8 @@ void loop()
 
 	// if the last transfer is more then one second ago,
 	// trigger reset into normal mode.
-	if(last_send>0 && millis()-last_send>1000)
+	//if(last_send>0 && millis()-last_send>1000)
+	if(0)
 	{
 		reset_target(false);
 		last_send=0;
